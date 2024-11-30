@@ -3,7 +3,7 @@ const app = express();
 const port = 4448; // You can change this port number
 
 // Route for GET requests to /data
-app.get('/data', (req, res) => {
+app.get('/status', (req, res) => {
     res.json({ message: "Hello, world!" });
 });
 
