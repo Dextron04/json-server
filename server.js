@@ -1,8 +1,16 @@
 const express = require('express');
+const cors = require('cors');  // Import the CORS middleware
 const app = express();
 const port = 4448; // You can change this port number
 
-// Route for GET requests to /data
+// Enable CORS for specific origin (your frontend URL)
+app.use(cors({
+    origin: 'http://localhost:3000',  // Replace with your frontend URL if different
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow methods you need
+    allowedHeaders: '*',  // Allow all headers (you can restrict if necessary)
+}));
+
+// Route for GET requests to /status
 app.get('/status', (req, res) => {
     res.json({ message: "Hello, world!" });
 });
