@@ -1,12 +1,28 @@
 const express = require('express');
 const app = express();
-const cors = require('cors');
+const os = require('os'); // Node.js module to get system information
+const fs = require('fs'); // Node.js module to read files
 
 app.use(cors());
 
+function getTempratures() {
+    try {
+        const temp = fs.readFileSync('/sys/class/thermal/thermal_zone0/temp', 'utf8');
+        return parseFloat(temp) / 1000; // Convert the temperature from Kelvin to Celsius
+    } catch (e) {
+        return null;
+    }
+}
 
-app.get('/raspi4b', (req, res) => {
-    res.json({ message: 'you found me' });
+// Route for GET requests to /status
+app.get('/status', (req, res) => {
+    const temperature = getTempratures();
+    const memoryUsage = ((os.totalmem() - os.freemem()) / os.totalmem()) * 100;
+    res.json({
+        server: "Dex Pi",
+        temperature: temperature !== null ? `${temperature.toFixed(2)} °C` : 'N/A',
+        memoryUsage: `${memoryUsage.toFixed(2)}%`,
+    });
 });
 
 app.get('/raspi4b/status', (req, res) => {
