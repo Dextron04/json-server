@@ -3,7 +3,7 @@ const app = express();
 const os = require('os'); // Node.js module to get system information
 const fs = require('fs'); // Node.js module to read files
 
-app.use(cors());
+
 
 function getTempratures() {
     try {
@@ -29,7 +29,7 @@ app.get('/raspi4b/status', (req, res) => {
     res.json({ status: 'online', cpu_usage: '25%' });
 });
 
-const port = 4440;
+const port = 8080;
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
 });
