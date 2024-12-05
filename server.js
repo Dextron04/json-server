@@ -68,7 +68,13 @@ app.post("/raspi4b/restart", (req, res) => {
 });
 
 app.get('/raspi4b/status', (req, res) => {
-    res.json({ status: 'online', cpu_usage: '25%' });
+    const temperature = getTempratures();
+    const memoryUsage = ((os.totalmem() - os.freemem()) / os.totalmem()) * 100;
+    res.json({
+        server: "Dex Pi 4B",
+        temperature: temperature !== null ? `${temperature.toFixed(2)} °C` : 'N/A',
+        memoryUsage: `${memoryUsage.toFixed(2)}%`,
+    });
 });
 
 const port = 8080;
