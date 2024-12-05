@@ -2,7 +2,26 @@ const express = require('express');
 const app = express();
 const os = require('os'); // Node.js module to get system information
 const fs = require('fs'); // Node.js module to read files
+const cors = require('cors');
 
+const allowedOrigins = [
+	'https://rest.dextron04.in',
+	'http://localhost:3000'
+]
+
+// Only use cors middleware for handling CORS
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
+    credentials: true,
+}));
 
 
 function getTempratures() {
