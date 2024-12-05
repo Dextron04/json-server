@@ -3,6 +3,7 @@ const app = express();
 const os = require('os'); // Node.js module to get system information
 const fs = require('fs'); // Node.js module to read files
 const cors = require('cors');
+const { exec } = require("child_process");
 
 const allowedOrigins = [
 	'https://rest.dextron04.in',
@@ -42,6 +43,28 @@ app.get('/status', (req, res) => {
         temperature: temperature !== null ? `${temperature.toFixed(2)} °C` : 'N/A',
         memoryUsage: `${memoryUsage.toFixed(2)}%`,
     });
+});
+
+app.post("/restart", (req, res) => {
+	exec("sudo reboot", (error, stdout, stderr) => {
+		if(error) {
+			cosole.error(`Error restarting: ${error.message}`);
+			return res.status(500).json({message: "Failed to restart"})
+		}
+
+		res.json({message: "System is Resatrting. . . "})
+	});
+});
+
+app.post("/raspi4b/restart", (req, res) => {
+	exec("sudo reboot", (error, stdout, stderr) => {
+		if(error) {
+			cosole.error(`Error restarting: ${error.message}`);
+			return res.status(500).json({message: "Failed to restart"})
+		}
+
+		res.json({message: "System is Resatrting. . . "})
+	});
 });
 
 app.get('/raspi4b/status', (req, res) => {
