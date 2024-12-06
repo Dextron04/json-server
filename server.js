@@ -3,7 +3,10 @@ const app = express();
 const os = require('os'); // Node.js module to get system information
 const fs = require('fs'); // Node.js module to read files
 const cors = require('cors');
+require("dotenv").config();
 const { exec } = require("child_process");
+
+const PASSWORD = process.env.ADMIN_PASSWORD;
 
 const allowedOrigins = [
 	'https://rest.dextron04.in',
@@ -23,6 +26,7 @@ app.use(cors({
     allowedHeaders: ['Content-Type'],
     credentials: true,
 }));
+app.use(express.json()); // Middleware to parse JSON bodies
 
 
 function getTempratures() {
@@ -33,6 +37,26 @@ function getTempratures() {
         return null;
     }
 }
+
+const validatePassword = (req, res, next) => {
+    const { password } = req.body || {}; // Safely access req.body
+
+    console.log("Request Body: ", req.body);
+    console.log(PASSWORD);
+    console.log("Password that was passed: ", password);
+
+    if (!password || password !== PASSWORD) {
+        return res.status(401).json({ message: "Unauthorized: Invalid password" });
+    }
+
+    if (password === PASSWORD){
+    	console.log("It matched!")
+    } else{
+    	console.log("It did not match")
+    }
+
+    next();
+};
 
 // Route for GET requests to /status
 app.get('/status', (req, res) => {
@@ -45,7 +69,7 @@ app.get('/status', (req, res) => {
     });
 });
 
-app.post("/restart", (req, res) => {
+app.post("/restart", validatePassword, (req, res) => {
 	exec("sudo reboot", (error, stdout, stderr) => {
 		if(error) {
 			cosole.error(`Error restarting: ${error.message}`);
@@ -56,7 +80,7 @@ app.post("/restart", (req, res) => {
 	});
 });
 
-app.post("/raspi4b/restart", (req, res) => {
+app.post("/raspi4b/restart", validatePassword, (req, res) => {
 	exec("sudo reboot", (error, stdout, stderr) => {
 		if(error) {
 			cosole.error(`Error restarting: ${error.message}`);
@@ -77,7 +101,7 @@ app.get('/raspi4b/status', (req, res) => {
     });
 });
 
-const port = 8080;
+const port = process.env.PORT;
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
 });
