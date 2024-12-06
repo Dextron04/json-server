@@ -9,10 +9,9 @@ const { exec } = require("child_process");
 const PASSWORD = process.env.ADMIN_PASSWORD;
 
 const allowedOrigins = [
-	'https://rest.dextron04.in',
-	'http://localhost:3000',
-	'*'
-]
+    'https://rest.dextron04.in',
+    'http://localhost:3000'
+];
 
 // Only use cors middleware for handling CORS
 app.use(cors({
@@ -85,27 +84,41 @@ app.post("/restart-server-dashboard", (req, res) => {
 });
 
 // Restarting the json-server
-app.post("/restart-server", (req, res) => {
-	exec("pm2 restart server", (error, stdout, stderr) => {
-		if(error) {
-			cosole.error(`Error restarting: ${error.message}`);
-			return res.status(500).json({message: "Failed to restart"})
-		}
+app.post("/restart-server", validatePassword, (req, res) => {
+    console.log("Restart request received");
+    res.status(200).json({ message: "System is Restarting..." });
+    exec("pm2 restart server", (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error: ${error.message}`);
+            return res.status(500).json({ message: `Error: ${error.message}` });
+        }
+        if (stderr) {
+            console.error(`Stderr: ${stderr}`);
+            return res.status(500).json({ message: `Stderr: ${stderr}` });
+        }
 
-		res.json({message: "System is Resatrting. . . "})
-	});
+        console.log(`Stdout: ${stdout}`);
+        res.status(200).json({ message: "System is Restarting..." });
+    });
 });
 
 // Restarting the json-server (4B)
-app.post("/raspi4b/restart-server", (req, res) => {
-	exec("pm2 restart server", (error, stdout, stderr) => {
-		if(error) {
-			cosole.error(`Error restarting: ${error.message}`);
-			return res.status(500).json({message: "Failed to restart"})
-		}
+app.post("/raspi4b/restart-server", validatePassword, (req, res) => {
+    console.log("Restart request received");
+    res.status(200).json({ message: "System is Restarting..." });
+    exec("pm2 restart server", (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error: ${error.message}`);
+            return res.status(500).json({ message: `Error: ${error.message}` });
+        }
+        if (stderr) {
+            console.error(`Stderr: ${stderr}`);
+            return res.status(500).json({ message: `Stderr: ${stderr}` });
+        }
 
-		res.json({message: "System is Resatrting. . . "})
-	});
+        console.log(`Stdout: ${stdout}`);
+        res.status(200).json({ message: "System is Restarting..." });
+    });
 });
 
 // Restarting the main server
