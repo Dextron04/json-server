@@ -10,7 +10,8 @@ const PASSWORD = process.env.ADMIN_PASSWORD;
 
 const allowedOrigins = [
 	'https://rest.dextron04.in',
-	'http://localhost:3000'
+	'http://localhost:3000',
+	'*'
 ]
 
 // Only use cors middleware for handling CORS
@@ -41,10 +42,6 @@ function getTempratures() {
 const validatePassword = (req, res, next) => {
     const { password } = req.body || {}; // Safely access req.body
 
-    console.log("Request Body: ", req.body);
-    console.log(PASSWORD);
-    console.log("Password that was passed: ", password);
-
     if (!password || password !== PASSWORD) {
         return res.status(401).json({ message: "Unauthorized: Invalid password" });
     }
@@ -69,6 +66,49 @@ app.get('/status', (req, res) => {
     });
 });
 
+app.get('/test', (req, res) => {
+    res.json({
+        message: "The test was successful! :)"
+    });
+});
+
+// Restarting the server dashboard
+app.post("/restart-server-dashboard", (req, res) => {
+	exec("pm2 restart server-dashboard", (error, stdout, stderr) => {
+		if(error) {
+			cosole.error(`Error restarting: ${error.message}`);
+			return res.status(500).json({message: "Failed to restart"})
+		}
+
+		res.json({message: "System is Resatrting. . . "})
+	});
+});
+
+// Restarting the json-server
+app.post("/restart-server", (req, res) => {
+	exec("pm2 restart server", (error, stdout, stderr) => {
+		if(error) {
+			cosole.error(`Error restarting: ${error.message}`);
+			return res.status(500).json({message: "Failed to restart"})
+		}
+
+		res.json({message: "System is Resatrting. . . "})
+	});
+});
+
+// Restarting the json-server (4B)
+app.post("/raspi4b/restart-server", (req, res) => {
+	exec("pm2 restart server", (error, stdout, stderr) => {
+		if(error) {
+			cosole.error(`Error restarting: ${error.message}`);
+			return res.status(500).json({message: "Failed to restart"})
+		}
+
+		res.json({message: "System is Resatrting. . . "})
+	});
+});
+
+// Restarting the main server
 app.post("/restart", validatePassword, (req, res) => {
 	exec("sudo reboot", (error, stdout, stderr) => {
 		if(error) {
@@ -80,6 +120,7 @@ app.post("/restart", validatePassword, (req, res) => {
 	});
 });
 
+// Restarting the 4B Server
 app.post("/raspi4b/restart", validatePassword, (req, res) => {
 	exec("sudo reboot", (error, stdout, stderr) => {
 		if(error) {
