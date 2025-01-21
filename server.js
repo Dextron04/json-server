@@ -102,6 +102,38 @@ app.post("/restart-server", validatePassword, (req, res) => {
     });
 });
 
+app.post("/restart-launchpad", validatePassword, (req, res) => {
+    console.log("Restart request received");
+    res.status(200).json({ message: "System is Restarting..." });
+    exec("sudo systemctl restart launchpad-wifi", (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error: ${error.message}`);
+            return res.status(500).json({ message: `Error: ${error.message}` });
+        }
+        if (stderr) {
+            console.error(`Stderr: ${stderr}`);
+            return res.status(500).json({ message: `Stderr: ${stderr}` });
+        }
+
+        console.log(`Stdout: ${stdout}`);
+        res.status(200).json({ message: "Restarting Launch Pad" });
+    });
+});
+
+app.post("/full-system-shutdown", validatePassword, (req, res) => {
+	console.log("Full System Shutdown Initiated");
+	res.status(200).json({message: "System Shutting down..."});
+	exec("sudo shutdown now", (error, stdout, stderr) => {
+		if(error){
+			console.error(`Error: ${error.message}`);
+			return res.status(500).json({message: `Error: ${error.message}`});
+		}
+		if(stderr){
+			return res.status(500).json({message: `Stderr: ${stderr}`});
+		}
+	});
+});
+
 // Restarting the json-server (4B)
 app.post("/raspi4b/restart-server", validatePassword, (req, res) => {
     console.log("Restart request received");
@@ -153,6 +185,29 @@ app.get('/raspi4b/status', (req, res) => {
         temperature: temperature !== null ? `${temperature.toFixed(2)} °C` : 'N/A',
         memoryUsage: `${memoryUsage.toFixed(2)}%`,
     });
+});
+
+// GitHub Webhook endpoint
+app.post('/github-webhook', (req, res) => {
+    const event = req.headers['x-github-event'];
+
+    if (event === 'push') {
+        console.log('Push event received!');
+
+        // Run git pull and restart service commands
+        exec('git -C /home/dex/server-dashboard pull origin main && pm2 restart server-dashboard', (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error executing command: ${error.message}`);
+                return res.status(500).send('Failed to update and restart');
+            }
+            console.log(`Command Output: ${stdout}`);
+            console.error(`Command Error Output: ${stderr}`);
+            res.status(200).send('Updated and restarted successfully');
+        });
+    } else {
+        console.log(`Unhandled event type: ${event}`);
+        res.status(400).send('Unhandled event');
+    }
 });
 
 const port = process.env.PORT;
