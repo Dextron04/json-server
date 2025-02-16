@@ -5,13 +5,26 @@ const fs = require('fs'); // Node.js module to read files
 const cors = require('cors');
 require("dotenv").config();
 const { exec } = require("child_process");
+const { rateLimit } = require("express-rate-limit");
+
 
 const PASSWORD = process.env.ADMIN_PASSWORD;
+
+app.set('trust proxy', 1);
+
+const limiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 100, // Limit each IP to 100 requests per minute
+    message: { error: "Too many requests, please try again later." },
+    standardHeaders: true, // Send rate limit info in `RateLimit-*` headers
+    legacyHeaders: false, // Disable `X-RateLimit-*` headers
+});
 
 const allowedOrigins = [
     'https://rest.dextron04.in',
     'http://localhost:3000'
 ];
+
 
 // Only use cors middleware for handling CORS
 app.use(cors({
@@ -26,7 +39,8 @@ app.use(cors({
     allowedHeaders: ['Content-Type'],
     credentials: true,
 }));
-app.use(express.json()); // Middleware to parse JSON bodies
+
+app.use(limiter);
 
 
 function getTempratures() {
