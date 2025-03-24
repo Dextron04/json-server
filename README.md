@@ -1,6 +1,6 @@
 # 🌐 API Gateway with Rate Limiting, Authentication, and Caching
 
-![Generated Image March 24, 2025 - 1_41AM png](https://github.com/user-attachments/assets/ca09f7b4-fa8f-4a52-8ea3-3645f1f02180)
+![Generated Image March 24, 2025 - 1_41AM png [main-img]](https://github.com/user-attachments/assets/ca09f7b4-fa8f-4a52-8ea3-3645f1f02180)
 
 
 ## 🚀 Overview  
