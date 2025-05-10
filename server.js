@@ -101,6 +101,45 @@ app.get('/get-servers', (req, res) => {
     });
 });
 
+app.get('/system-stats', (req, res) => {
+    const cpuLoad = os.loadavg(); // [1min, 5min, 15min]
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+    const memUsagePercent = (usedMem / totalMem) * 100;
+
+    exec("df -h /", (error, stdout, stderr) => {
+        if (error) {
+            return res.status(500).json({ error: 'Failed to get disk usage', details: error.message });
+        }
+        const lines = stdout.trim().split('\n');
+        const diskInfo = lines[1] ? lines[1].split(/\s+/) : [];
+        const diskUsage = diskInfo.length >= 5 ? {
+            filesystem: diskInfo[0],
+            size: diskInfo[1],
+            used: diskInfo[2],
+            available: diskInfo[3],
+            usePercent: diskInfo[4],
+            mount: diskInfo[5]
+        } : {};
+
+        res.json({
+            cpu: {
+                loadavg_1min: cpuLoad[0],
+                loadavg_5min: cpuLoad[1],
+                loadavg_15min: cpuLoad[2]
+            },
+            memory: {
+                total: totalMem,
+                free: freeMem,
+                used: usedMem,
+                usagePercent: memUsagePercent.toFixed(2)
+            },
+            disk: diskUsage
+        });
+    });
+});
+
 app.get('/test', (req, res) => {
     res.json({
         message: "The test was successful! :)"
