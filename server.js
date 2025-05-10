@@ -6,6 +6,8 @@ const cors = require('cors');
 require("dotenv").config();
 const { exec } = require("child_process");
 const { rateLimit } = require("express-rate-limit");
+const raspi4bRoutes = require('./raspi4bRoutes');
+const raspi2Routes = require('./raspi2Routes');
 
 
 const PASSWORD = process.env.ADMIN_PASSWORD;
@@ -56,15 +58,15 @@ const validatePassword = (req, res, next) => {
     const { password } = req.body || {}; // Safely access req.body
 
     console.log("Passed in password is: ", password);
-    
+
     if (!password || password !== PASSWORD) {
         return res.status(401).json({ message: "Unauthorized: Invalid password" });
     }
 
-    if (password === PASSWORD){
-    	console.log("It matched!")
-    } else{
-    	console.log("It did not match")
+    if (password === PASSWORD) {
+        console.log("It matched!")
+    } else {
+        console.log("It did not match")
     }
 
     next();
@@ -78,6 +80,7 @@ app.get('/status', (req, res) => {
         server: "Dex Pi",
         temperature: temperature !== null ? `${temperature.toFixed(2)} °C` : 'N/A',
         memoryUsage: `${memoryUsage.toFixed(2)}%`,
+        message: "LOL if you see this once it is good but if you see it twice it is bad"
     });
 });
 
@@ -89,14 +92,14 @@ app.get('/test', (req, res) => {
 
 // Restarting the server dashboard
 app.post("/restart-server-dashboard", (req, res) => {
-	exec("pm2 restart server-dashboard", (error, stdout, stderr) => {
-		if(error) {
-			cosole.error(`Error restarting: ${error.message}`);
-			return res.status(500).json({message: "Failed to restart"})
-		}
+    exec("pm2 restart server-dashboard", (error, stdout, stderr) => {
+        if (error) {
+            cosole.error(`Error restarting: ${error.message}`);
+            return res.status(500).json({ message: "Failed to restart" })
+        }
 
-		res.json({message: "System is Resatrting. . . "})
-	});
+        res.json({ message: "System is Resatrting. . . " })
+    });
 });
 
 // Restarting the json-server
@@ -137,69 +140,28 @@ app.post("/restart-launchpad", validatePassword, (req, res) => {
 });
 
 app.post("/full-system-shutdown", validatePassword, (req, res) => {
-	console.log("Full System Shutdown Initiated");
-	res.status(200).json({message: "System Shutting down..."});
-	exec("sudo shutdown now", (error, stdout, stderr) => {
-		if(error){
-			console.error(`Error: ${error.message}`);
-			return res.status(500).json({message: `Error: ${error.message}`});
-		}
-		if(stderr){
-			return res.status(500).json({message: `Stderr: ${stderr}`});
-		}
-	});
-});
-
-// Restarting the json-server (4B)
-app.post("/raspi4b/restart-server", validatePassword, (req, res) => {
-    console.log("Restart request received");
-    res.status(200).json({ message: "System is Restarting..." });
-    exec("pm2 restart server", (error, stdout, stderr) => {
+    console.log("Full System Shutdown Initiated");
+    res.status(200).json({ message: "System Shutting down..." });
+    exec("sudo shutdown now", (error, stdout, stderr) => {
         if (error) {
             console.error(`Error: ${error.message}`);
             return res.status(500).json({ message: `Error: ${error.message}` });
         }
         if (stderr) {
-            console.error(`Stderr: ${stderr}`);
             return res.status(500).json({ message: `Stderr: ${stderr}` });
         }
-
-        console.log(`Stdout: ${stdout}`);
-        res.status(200).json({ message: "System is Restarting..." });
     });
 });
 
 // Restarting the main server
 app.post("/restart", validatePassword, (req, res) => {
-	exec("sudo reboot", (error, stdout, stderr) => {
-		if(error) {
-			cosole.error(`Error restarting: ${error.message}`);
-			return res.status(500).json({message: "Failed to restart"})
-		}
+    exec("sudo reboot", (error, stdout, stderr) => {
+        if (error) {
+            cosole.error(`Error restarting: ${error.message}`);
+            return res.status(500).json({ message: "Failed to restart" })
+        }
 
-		res.json({message: "System is Resatrting. . . "})
-	});
-});
-
-// Restarting the 4B Server
-app.post("/raspi4b/restart", validatePassword, (req, res) => {
-	exec("sudo reboot", (error, stdout, stderr) => {
-		if(error) {
-			cosole.error(`Error restarting: ${error.message}`);
-			return res.status(500).json({message: "Failed to restart"})
-		}
-
-		res.json({message: "System is Resatrting. . . "})
-	});
-});
-
-app.get('/raspi4b/status', (req, res) => {
-    const temperature = getTempratures();
-    const memoryUsage = ((os.totalmem() - os.freemem()) / os.totalmem()) * 100;
-    res.json({
-        server: "Dex Pi 4B",
-        temperature: temperature !== null ? `${temperature.toFixed(2)} °C` : 'N/A',
-        memoryUsage: `${memoryUsage.toFixed(2)}%`,
+        res.json({ message: "System is Resatrting. . . " })
     });
 });
 
@@ -225,6 +187,9 @@ app.post('/github-webhook', (req, res) => {
         res.status(400).send('Unhandled event');
     }
 });
+
+raspi4bRoutes(app, validatePassword, getTempratures, os);
+raspi2Routes(app, validatePassword, getTempratures, os);
 
 const port = process.env.PORT;
 app.listen(port, () => {
