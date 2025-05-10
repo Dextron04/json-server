@@ -6,8 +6,6 @@ const cors = require('cors');
 require("dotenv").config();
 const { exec } = require("child_process");
 const { rateLimit } = require("express-rate-limit");
-const raspi4bRoutes = require('./raspi4bRoutes');
-const raspi2Routes = require('./raspi2Routes');
 
 
 const PASSWORD = process.env.ADMIN_PASSWORD;
