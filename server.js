@@ -205,9 +205,6 @@ app.post('/github-webhook', (req, res) => {
     }
 });
 
-raspi4bRoutes(app, validatePassword, getTempratures, os);
-raspi2Routes(app, validatePassword, getTempratures, os);
-
 const port = process.env.PORT;
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
