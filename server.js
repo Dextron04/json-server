@@ -84,6 +84,25 @@ app.get('/status', (req, res) => {
     });
 });
 
+app.get('/get-servers', (req, res) => {
+    res.json({
+        servers: {
+            "Dex Pi 4B": {
+                "ip_address": "192.168.1.81",
+                "status": "online"
+            },
+            "Dex Pi 2": {
+                "ip_address": "192.168.1.76",
+                "status": "online"
+            },
+            "Dex Pi": {
+                "ip_address": "192.168.1.145",
+                "status": "online"
+            }
+        }
+    });
+});
+
 app.get('/test', (req, res) => {
     res.json({
         message: "The test was successful! :)"
