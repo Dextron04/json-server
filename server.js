@@ -55,6 +55,8 @@ function getTempratures() {
 const validatePassword = (req, res, next) => {
     const { password } = req.body || {}; // Safely access req.body
 
+    console.log("Passed in password is: ", password);
+    
     if (!password || password !== PASSWORD) {
         return res.status(401).json({ message: "Unauthorized: Invalid password" });
     }
