@@ -61,7 +61,7 @@ const validatePassword = (req, res, next) => {
         return res.status(401).json({ message: "Unauthorized: Invalid password" });
     }
 
-    if (password === PASSWORD) {
+    if (password === process.env.PASSWORD) {
         console.log("It matched!")
     } else {
         console.log("It did not match")
