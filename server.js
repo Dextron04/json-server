@@ -85,21 +85,32 @@ app.get('/status', (req, res) => {
 });
 
 app.get('/get-servers', (req, res) => {
-    res.json({
-        servers: {
-            "Dex Pi 4B": {
-                "ip_address": "192.168.1.81",
-                "status": "online"
-            },
-            "Dex Pi 2": {
-                "ip_address": "192.168.1.76",
-                "status": "online"
-            },
-            "Dex Pi": {
-                "ip_address": "192.168.1.145",
-                "status": "online"
-            }
+    const servers = {
+        "Dex Pi 4B": {
+            "ip_address": "192.168.1.81",
+            "status": "unknown"
+        },
+        "Dex Pi 2": {
+            "ip_address": "192.168.1.76",
+            "status": "unknown"
+        },
+        "Dex Pi": {
+            "ip_address": "192.168.1.145",
+            "status": "unknown"
         }
+    };
+    const serverNames = Object.keys(servers);
+    let completed = 0;
+
+    serverNames.forEach(name => {
+        const ip = servers[name].ip_address;
+        exec(`ping -c 1 -W 1 ${ip}`, (error, stdout, stderr) => {
+            servers[name].status = (!error && stdout.includes('1 received')) ? 'online' : 'offline';
+            completed++;
+            if (completed === serverNames.length) {
+                res.json({ servers });
+            }
+        });
     });
 });
 
