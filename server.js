@@ -87,7 +87,7 @@ app.get('/status', (req, res) => {
 app.get('/get-servers', (req, res) => {
     const servers = {
         "Dex Pi 4B": {
-            "ip_address": "192.168.1.81",
+            "ip_address": "192.168.1.119",
             "status": "unknown"
         },
         "Dex Pi 2": {
