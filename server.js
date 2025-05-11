@@ -246,6 +246,27 @@ app.post('/github-webhook', (req, res) => {
     }
 });
 
+app.get('/services', (req, res) => {
+    exec('systemctl list-units --type=service --all --no-pager --no-legend', (error, stdout, stderr) => {
+        if (error) {
+            return res.status(500).json({ error: 'Failed to list services', details: error.message });
+        }
+        const services = stdout.trim().split('\n').filter(Boolean).map(line => {
+            // Format: UNIT LOAD ACTIVE SUB DESCRIPTION
+            // Example: ssh.service loaded active running OpenBSD Secure Shell server
+            const parts = line.split(/\s+/);
+            return {
+                unit: parts[0],
+                load: parts[1],
+                active: parts[2],
+                sub: parts[3],
+                description: parts.slice(4).join(' ')
+            };
+        });
+        res.json({ services });
+    });
+});
+
 const port = process.env.PORT;
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
