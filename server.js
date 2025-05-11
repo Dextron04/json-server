@@ -41,6 +41,8 @@ app.use(cors({
 }));
 
 app.use(limiter);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 
 function getTempratures() {
@@ -61,7 +63,7 @@ const validatePassword = (req, res, next) => {
         return res.status(401).json({ message: "Unauthorized: Invalid password" });
     }
 
-    if (password === process.env.PASSWORD) {
+    if (password === PASSWORD) {
         console.log("It matched!")
     } else {
         console.log("It did not match")
