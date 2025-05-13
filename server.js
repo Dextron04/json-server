@@ -317,6 +317,50 @@ app.get('/system-alerts', (req, res) => {
     });
 });
 
+app.get('/logs', (req, res) => {
+    const filter = req.query.filter || 'All';
+    // Map filter to journalctl priority
+    let priorityArg = '';
+    if (filter === 'Error') priorityArg = '-p 3'; // err
+    else if (filter === 'Warning') priorityArg = '-p 4'; // warning
+    else if (filter === 'Info') priorityArg = '-p 6'; // info
+    // All = no priority filter
+    const cmd = `journalctl ${priorityArg} -n 100 --no-pager --output=json`;
+    exec(cmd, (error, stdout, stderr) => {
+        if (error) {
+            return res.status(500).json({ error: 'Failed to get logs', details: error.message });
+        }
+        const logs = stdout.trim().split('\n').filter(Boolean).map(line => {
+            try {
+                const entry = JSON.parse(line);
+                // Map PRIORITY to level
+                let level = 'Other';
+                if (entry.PRIORITY === '3') level = 'Error';
+                else if (entry.PRIORITY === '4') level = 'Warning';
+                else if (entry.PRIORITY === '6') level = 'Info';
+                // Use MESSAGE as message
+                const message = entry.MESSAGE || '';
+                // Use __REALTIME_TIMESTAMP (microseconds since epoch) or _SOURCE_REALTIME_TIMESTAMP
+                let timestamp = new Date();
+                if (entry.__REALTIME_TIMESTAMP) {
+                    timestamp = new Date(Number(entry.__REALTIME_TIMESTAMP) / 1000);
+                } else if (entry._SOURCE_REALTIME_TIMESTAMP) {
+                    timestamp = new Date(Number(entry._SOURCE_REALTIME_TIMESTAMP) / 1000);
+                }
+                return {
+                    id: uuidv4(),
+                    message,
+                    level,
+                    timestamp: timestamp.toISOString()
+                };
+            } catch (e) {
+                return null;
+            }
+        }).filter(Boolean);
+        res.json({ logs });
+    });
+});
+
 const port = process.env.PORT;
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
