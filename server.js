@@ -6,6 +6,7 @@ const cors = require('cors');
 require("dotenv").config();
 const { exec } = require("child_process");
 const { rateLimit } = require("express-rate-limit");
+const { v4: uuidv4 } = require('uuid');
 
 
 const PASSWORD = process.env.ADMIN_PASSWORD;
@@ -275,6 +276,44 @@ app.get('/services', (req, res) => {
             };
         });
         res.json({ services });
+    });
+});
+
+app.get('/system-alerts', (req, res) => {
+    exec('journalctl -p 0..3 -n 50 --no-pager --output=json', (error, stdout, stderr) => {
+        if (error) {
+            return res.status(500).json({ error: 'Failed to get system alerts', details: error.message });
+        }
+        // Each line is a JSON object
+        const alerts = stdout.trim().split('\n').filter(Boolean).map(line => {
+            try {
+                const entry = JSON.parse(line);
+                // Map priority to severity
+                let severity = 'Low';
+                if (entry.PRIORITY === '0' || entry.PRIORITY === '1') severity = 'High';
+                else if (entry.PRIORITY === '2') severity = 'Medium';
+                // Use SYSLOG_IDENTIFIER or _COMM as title, MESSAGE as description
+                const title = entry.SYSLOG_IDENTIFIER || entry._COMM || 'System';
+                const description = entry.MESSAGE || '';
+                // Use __REALTIME_TIMESTAMP (microseconds since epoch) or _SOURCE_REALTIME_TIMESTAMP
+                let timestamp = new Date();
+                if (entry.__REALTIME_TIMESTAMP) {
+                    timestamp = new Date(Number(entry.__REALTIME_TIMESTAMP) / 1000);
+                } else if (entry._SOURCE_REALTIME_TIMESTAMP) {
+                    timestamp = new Date(Number(entry._SOURCE_REALTIME_TIMESTAMP) / 1000);
+                }
+                return {
+                    id: uuidv4(),
+                    title,
+                    description,
+                    severity,
+                    timestamp: timestamp.toISOString()
+                };
+            } catch (e) {
+                return null;
+            }
+        }).filter(Boolean);
+        res.json({ alerts });
     });
 });
 
